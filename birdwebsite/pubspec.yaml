@@ -57,6 +57,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets: 
+    - lib/assets/speaker.jpg
     - lib/assets/Cardinal.jpg
     - lib/assets/Chickadee.jpg
     - lib/assets/Finch.jpg

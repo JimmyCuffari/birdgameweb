@@ -1,7 +1,22 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+
+var questionType;
+
+var currbird;
+
+var lastbird;
+
+/*
+1 = get sound guess name
+2 = get picture guess name
+3 = get name guess sound
+*/
+
+var buttons_enabled = true;
 
 void main() {
   runApp(const MyApp());
@@ -54,14 +69,107 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MyHomePage> createState() => _QuestionSelectState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
+class _QuestionSelectState extends State<MyHomePage>
+    with TickerProviderStateMixin {
+  @override
+  Widget build(BuildContext context) {
+    void _setQuestion(q) {
+      questionType = q;
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => _MainPage()),
+      );
+    }
+
+    // This method is rerun every time setState is called, for instance as done
+    // by the _incrementCounter method above.
+    //
+    // The Flutter framework has been optimized to make rerunning build methods
+    // fast, so that you can just rebuild anything that needs updating rather
+    // than having to individually change instances of widgets.
+    return Scaffold(
+        body: Row(mainAxisAlignment: MainAxisAlignment.values[5], children: [
+      Column(
+        children: [
+          Expanded(
+              child: Container(
+                  width: MediaQuery.of(context).size.width * 0.90,
+                  padding: EdgeInsets.all(10),
+                  child: ElevatedButton(
+                      style: ButtonStyle(
+                          shape:
+                              WidgetStateProperty.all<RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ))),
+                      onPressed: () {
+                        _setQuestion(1);
+                      },
+                      child: Text(
+                        "Get Sound Guess Name",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 50.0,
+                        ),
+                      )))),
+          Expanded(
+              child: Container(
+                  width: MediaQuery.of(context).size.width * 0.90,
+                  padding: EdgeInsets.all(10),
+                  child: ElevatedButton(
+                      style: ButtonStyle(
+                          shape:
+                              WidgetStateProperty.all<RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ))),
+                      onPressed: () {
+                        _setQuestion(2);
+                      },
+                      child: Text("Get Picture Guess Name",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 50.0,
+                          ))))),
+          Expanded(
+              child: Container(
+                  width: MediaQuery.of(context).size.width * 0.90,
+                  padding: EdgeInsets.all(10),
+                  child: ElevatedButton(
+                      style: ButtonStyle(
+                          shape:
+                              WidgetStateProperty.all<RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ))),
+                      onPressed: () {
+                        _setQuestion(3);
+                      },
+                      child: Text("Get Name Guess Sound",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 50.0,
+                          ))))),
+        ],
+      )
+    ]));
+  }
+}
+
+class _MainPage extends StatefulWidget {
+  @override
+  State<_MainPage> createState() => _MyHomePage();
+}
+
+class _MyHomePage extends State<_MainPage> with TickerProviderStateMixin {
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   void _playAudio(var audio) async {
     await _audioPlayer.stop();
+
     await _audioPlayer.play(AssetSource(audio + '.wav'));
   }
 
@@ -87,7 +195,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   var correctness = Image.asset("lib/assets/empty.png");
 
-  var currbird; // = "Cardinal";
+  // var currbird; // = "Cardinal";
 
   late TabController _controller;
 
@@ -111,7 +219,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     _controller = new TabController(length: 3, vsync: this);
   }
 
-  var question = Image.asset("lib/assets/Cardinal.jpg");
+  var question = Image.asset("lib/assets/empty.png");
 
   void _incrementCounter() {
     setState(() {
@@ -125,18 +233,31 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   }
 
   void _checkAnswer(var answer, var choice) {
+    buttons_enabled = false;
     setState(() {
       if (answer == choice) {
         _showpic("lib/assets/checkmark.png");
-        //correctness = Image.asset("lib/assets/checkmark.png");
+        correctness = Image.asset("lib/assets/checkmark.png");
         _playAudio('bell');
       } else {
         _showpic("lib/assets/XPNG.PNG");
-        //correctness = Image.asset("lib/assets/XPNG.PNG");
+        correctness = Image.asset("lib/assets/XPNG.PNG");
         _playAudio('wrong');
       }
+      Timer(Duration(seconds: 1), () {
+        if (answer == choice) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => _InfoPage()),
+          );
+        }
+        setState(() {
+          _showpic("lib/assets/empty.PNG");
+          buttons_enabled = true;
+        });
+      });
     });
-    // sleep(Duration(seconds: 1));
+    lastbird = currbird;
     if (answer == choice) {
       _setNextQuestion();
     }
@@ -147,12 +268,25 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       //var ans = Random().nextInt(4);
       answer = Random().nextInt(birdNames.length);
 
-      var currbird = birdNames[answer];
+      currbird = birdNames[answer];
 
-      _playAudio(currbird);
+      switch (questionType) {
+        case 1:
+          //_playAudio(currbird);
+          question = Image.asset(
+            "lib/assets/speaker.jpg",
+          );
+          break;
+        case 2:
+          question = Image.asset(
+            "lib/assets/" + currbird + ".jpg",
+          );
+          break;
+        case 3:
+          break;
+      }
 
       var chosen = [answer];
-      question = Image.asset("lib/assets/" + currbird + ".jpg");
 
       var ans = answer;
 
@@ -205,63 +339,211 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
-        body: Stack(
+        body: Row(
+      mainAxisAlignment: MainAxisAlignment.values[2],
       children: [
-        Column(
-            mainAxisAlignment: MainAxisAlignment.values[5],
-            //mainAxisSize: MainAxisSize.min,
-            children: [
-              GestureDetector(
-                  onTap: () {
-                    _playAudio(birdNames[answer]);
-                  }, // Image tapped
-                  child: question),
-              Row(mainAxisAlignment: MainAxisAlignment.values[3], children: [
-                Container(
-                    padding: EdgeInsets.all(30),
-                    width: 175,
-                    child: ElevatedButton(
-                        onPressed: () {
-                          _checkAnswer(answer, choice1);
-                        },
-                        child: Text(birdNames[choice1]))),
-                Container(
-                    width: 175,
-                    padding: EdgeInsets.all(30),
-                    child: ElevatedButton(
-                        onPressed: () {
-                          _checkAnswer(answer, choice2);
-                        },
-                        child: Text(birdNames[choice2]))),
-              ]),
-              Row(mainAxisAlignment: MainAxisAlignment.values[3], children: [
-                Container(
-                    width: 175,
-                    padding: EdgeInsets.all(30),
-                    child: ElevatedButton(
-                        onPressed: () {
-                          _checkAnswer(answer, choice3);
-                        },
-                        child: Text(birdNames[choice3]))),
-                Container(
-                    width: 175,
-                    padding: EdgeInsets.all(30),
-                    child: ElevatedButton(
-                        onPressed: () {
-                          _checkAnswer(answer, choice4);
-                        },
-                        child: Text(birdNames[choice4]))),
-              ]),
-            ]),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.values[5],
+        Stack(
+          alignment: Alignment.center,
           children: [
-            Row(
+            Column(
+                mainAxisAlignment: MainAxisAlignment.values[5],
+                //mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                      onTap: () {
+                        if (questionType == 1) {
+                          _playAudio(birdNames[answer]);
+                        }
+                      }, // Image tapped
+                      child: Expanded(
+                          child: Container(
+                              width: MediaQuery.of(context).size.width * 0.90,
+                              height: MediaQuery.of(context).size.width * 0.90,
+                              child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8.0),
+                                  child: question)))),
+                  Expanded(
+                      child: Container(
+                          padding: EdgeInsets.all(10),
+                          width: MediaQuery.of(context).size.width * 0.90,
+                          child: ElevatedButton(
+                              style: ButtonStyle(
+                                  shape: WidgetStateProperty.all<
+                                          RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                              ))),
+                              onPressed: () {
+                                _checkAnswer(answer, choice1);
+                              },
+                              child: Text(
+                                birdNames[choice1],
+                                style: TextStyle(
+                                  fontSize: 50.0,
+                                ),
+                              )))),
+                  Expanded(
+                      child: Container(
+                          width: MediaQuery.of(context).size.width * 0.90,
+                          padding: EdgeInsets.all(10),
+                          child: ElevatedButton(
+                              style: ButtonStyle(
+                                  shape: WidgetStateProperty.all<
+                                          RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                              ))),
+                              onPressed: () {
+                                _checkAnswer(answer, choice2);
+                              },
+                              child: Text(
+                                birdNames[choice2],
+                                style: TextStyle(
+                                  fontSize: 50.0,
+                                ),
+                              )))),
+                  Expanded(
+                      child: Container(
+                          width: MediaQuery.of(context).size.width * 0.90,
+                          padding: EdgeInsets.all(10),
+                          child: ElevatedButton(
+                              style: ButtonStyle(
+                                  shape: WidgetStateProperty.all<
+                                          RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                              ))),
+                              onPressed: () {
+                                _checkAnswer(answer, choice3);
+                              },
+                              child: Text(birdNames[choice3],
+                                  style: TextStyle(
+                                    fontSize: 50.0,
+                                  ))))),
+                  Expanded(
+                      child: Container(
+                          width: MediaQuery.of(context).size.width * 0.90,
+                          padding: EdgeInsets.all(10),
+                          child: ElevatedButton(
+                              style: ButtonStyle(
+                                  shape: WidgetStateProperty.all<
+                                          RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                              ))),
+                              onPressed: () {
+                                _checkAnswer(answer, choice4);
+                              },
+                              child: Text(birdNames[choice4],
+                                  style: TextStyle(
+                                    fontSize: 50.0,
+                                  ))))),
+                ]),
+            Column(
               mainAxisAlignment: MainAxisAlignment.values[5],
-              children: [correctness],
-            )
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.values[5],
+                  children: [correctness],
+                )
+              ],
+            ),
           ],
         )
+      ],
+    ));
+  }
+}
+
+class _InfoPage extends StatefulWidget {
+  @override
+  State<_InfoPage> createState() => _MyInfoPage();
+}
+
+class _MyInfoPage extends State<_InfoPage> with TickerProviderStateMixin {
+  @override
+  Widget build(BuildContext context) {
+    void _goBack() {
+      Navigator.pop(context);
+    }
+
+    final AudioPlayer _audioPlayer = AudioPlayer();
+
+    void _playAudio(var audio) async {
+      await _audioPlayer.stop();
+
+      await _audioPlayer.play(AssetSource(audio + '.wav'));
+    }
+
+    // This method is rerun every time setState is called, for instance as done
+    // by the _incrementCounter method above.
+    //
+    // The Flutter framework has been optimized to make rerunning build methods
+    // fast, so that you can just rebuild anything that needs updating rather
+    // than having to individually change instances of widgets.
+    return Scaffold(
+        body: ListView(
+      scrollDirection: Axis.vertical,
+      children: [
+        Expanded(
+            child: Container(
+                width: MediaQuery.of(context).size.width * 0.90,
+                padding: EdgeInsets.all(10),
+                child: ElevatedButton(
+                    style: ButtonStyle(
+                        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                            RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ))),
+                    onPressed: () {
+                      _goBack();
+                    },
+                    child: Text("Go Back",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 50.0,
+                        ))))),
+        Container(
+            width: MediaQuery.of(context).size.width * 0.90,
+            height: MediaQuery.of(context).size.width * 0.90,
+            child: ClipRRect(
+                borderRadius: BorderRadius.circular(8.0),
+                child: Image.asset(
+                  "lib/assets/" + lastbird + ".jpg",
+                ))),
+        Expanded(
+            child: Row(
+          mainAxisAlignment: MainAxisAlignment.values[5],
+          children: [
+            Text(
+              lastbird,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 50.0,
+              ),
+            ),
+            GestureDetector(
+                onTap: () {
+                  _playAudio(lastbird);
+                }, // Image tapped
+                child: Expanded(
+                    child: Container(
+                        width: MediaQuery.of(context).size.width * 0.40,
+                        height: MediaQuery.of(context).size.width * 0.40,
+                        child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8.0),
+                            child: Image.asset(
+                              "lib/assets/speaker.jpg",
+                            ))))),
+          ],
+        )),
+        Text(
+          "PLACEHOLDER" * 50,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 50.0,
+          ),
+        ),
       ],
     ));
   }
