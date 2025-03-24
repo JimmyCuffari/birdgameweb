@@ -1,0 +1,2 @@
+D:/GitHub/birdgameweb/birdwebsite/android/app/.cxx/Debug/34652w5p/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/GitHub/birdgameweb/birdwebsite/android/app/.cxx/Debug/34652w5p/armeabi-v7a/CMakeFiles/rebuild_cache.dir

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 var questionType;
 
@@ -19,6 +20,7 @@ var lastbird;
 var buttons_enabled = true;
 
 void main() {
+  setUrlStrategy(HashUrlStrategy());
   runApp(const MyApp());
 }
 
